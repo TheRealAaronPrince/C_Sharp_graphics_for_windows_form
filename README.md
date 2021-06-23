@@ -4,4 +4,5 @@ This is my attempt at making a graphics "driver" for use in c# projects
 This is free for anyone to use, and I will be using it in many of my future projects.
 while credit is not necessary, it would be appreciated.
 
-other, related, graphics projects (stored in subfolders to keep them organised) will require the "graphics proccessor.cs" file
+all of the other files in this project will require "graphics processor.cs".
+if a .cs file requires other files on top of "graphics processor.cs" then it's name will appear here with a list of it's dependancies
