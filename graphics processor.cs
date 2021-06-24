@@ -1,8 +1,8 @@
-﻿
 using System;
 using System.Drawing.Drawing2D;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 public class render
 {
@@ -10,31 +10,32 @@ public class render
 	public int[] colorArray = new int[76800];
 	//RGBA value array for the pixels
 	private byte[] pixelBuffer = new byte[307200];
-	//defining the bmp ready for pixel data
-	private Bitmap bmp = new Bitmap(320,240, PixelFormat.Format32bppRgb);
 	//defining the output bitmap (8x larger to reduce bluring when stretching to fill screen)
 	public Bitmap output = new Bitmap(2560,1920,PixelFormat.Format32bppRgb);
 	//loop to set a default color for every pixel
-	public void clearImg()
+	public void clearImg(int color = 0)
 	{
+		byte red, green, blue;
+		colorTransform(color,out red,out green,out blue);
 		//number of pixels in the image
-		for( int i = 0; i < 76800; i++)
+		for( int i = 0; i < colorArray.Length; i++)
 		{
 			//red
-			pixelBuffer[(4*i)+0] = 0;
+			pixelBuffer[(4*i)+0] = red;
 			//green
-			pixelBuffer[(4*i)+1] = 32;
+			pixelBuffer[(4*i)+1] = green;
 			//blue
-			pixelBuffer[(4*i)+2] = 128;
+			pixelBuffer[(4*i)+2] = blue;
 			//alpha (unused for now)
 			pixelBuffer[(4*i)+3] = 255;
+			colorArray[i] = color;
 		}
 	}
 	//convert color array to pixel buffer
 	public void pixelPaint()
 	{
 		//see clearImg
-		for(int i = 0; i < 76800; i++)
+		for(int i = 0; i < colorArray.Length; i++)
 		{
 			//0 to width -1
 			int x = i % 320;
@@ -46,12 +47,16 @@ public class render
 	//defining the color for an individual pixel
 	public void singlePixel(int X, int Y, int color)
 	{
-		byte red, green, blue;
-		colorTransform(color,out red,out green,out blue);
-		pixelBuffer[(((Y * 320)+ X)*4)+0] = red;
-		pixelBuffer[(((Y * 320)+ X)*4)+1] = green;
-		pixelBuffer[(((Y * 320)+ X)*4)+2] = blue;
-		pixelBuffer[(((Y * 320)+ X)*4)+3] = 255;
+		//use -1 for transparent color
+		if(color != -1)
+		{
+			byte red, green, blue;
+			colorTransform(color,out red,out green,out blue);
+			pixelBuffer[(((Y * 320)+ X)*4)+0] = red;
+			pixelBuffer[(((Y * 320)+ X)*4)+1] = green;
+			pixelBuffer[(((Y * 320)+ X)*4)+2] = blue;
+			pixelBuffer[(((Y * 320)+ X)*4)+3] = 255;
+		}
 	}
 	//converting an index into an RGB value
 	private void colorTransform(int index, out byte R, out byte G, out byte B)
@@ -81,19 +86,14 @@ public class render
 	//converting the array to an image
 	public void generate()
 	{
-		//see clearImg
-		for(int i = 0; i < 76800; i++)
-		{
-			//see pixelPaint
-			int x = i % 320;
-			int y = ((i - (i % 320)) / 320);
-			//testing if a pixel is different to the array(for optimisation)
-			if(bmp.GetPixel(x,y)!= Color.FromArgb(255, pixelBuffer[(((y * 320)+ x)*4)], pixelBuffer[(((y * 320)+ x)*4)+1], pixelBuffer[(((y * 320)+ x)*4)+2]))
-			{
-				//setting the pixels to the ARGB color
-				bmp.SetPixel(x ,y ,Color.FromArgb(255, pixelBuffer[(((y * 320)+ x)*4)], pixelBuffer[(((y * 320)+ x)*4)+1], pixelBuffer[(((y * 320)+ x)*4)+2]));
-			}
-		}
+		//defining the bmp ready for pixel data
+		Bitmap bmp = new Bitmap(320,240, PixelFormat.Format32bppRgb);
+		//extra data about bitmap
+		BitmapData bmpData = bmp.LockBits(new Rectangle(0,0,320,240),ImageLockMode.ReadWrite,PixelFormat.Format32bppArgb);
+		//pointer location in memory of bmp data
+		IntPtr ptrFirstPixel = bmpData.Scan0;
+		Marshal.Copy(pixelBuffer,0,ptrFirstPixel,307200);
+		bmp.UnlockBits(bmpData);
 		//enlarging the image to reduce scalling blur
 		Graphics gr = Graphics.FromImage((System.Drawing.Image)output);
 		gr.InterpolationMode = InterpolationMode.NearestNeighbor;
