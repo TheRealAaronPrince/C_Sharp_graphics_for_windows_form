@@ -2,6 +2,7 @@ using System;
 using System.Drawing.Drawing2D;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 public class render
@@ -12,17 +13,9 @@ public class render
 	private byte[] pixelBuffer = new byte[307200];
 	//defining the output bitmap (8x larger to reduce bluring when stretching to fill screen)
 	public Bitmap output = new Bitmap(2560,1920,PixelFormat.Format32bppRgb);
-	private Dictionary<int, Color> colorDict;
-
-	public render()
-	{
-		colorDict = Enumerable.Range(0, 64)
-			.Select(c =>
-			{
-				return new { c, color = colorTransform(c) };
-			})
-			.ToDictionary(k => k.c, v => v.color);
-	}
+	private Color[] colorIndexToColor = Enumerable.Range(0, 64)
+			.Select(c => colorTransform(c))
+			.ToArray();
 
 	//loop to set a default color for every pixel
 	public void clearImg(int color = 0)
@@ -62,7 +55,7 @@ public class render
 		//use -1 for transparent color
 		if(color != -1)
 		{
-			var r = colorDict[color];
+			var r = colorIndexToColor[color];
 			pixelBuffer[(((Y * 320) + X) * 4) + 0] = r.R;
 			pixelBuffer[(((Y * 320) + X) * 4) + 1] = r.G;
 			pixelBuffer[(((Y * 320) + X) * 4) + 2] = r.B;
