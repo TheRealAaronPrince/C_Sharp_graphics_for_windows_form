@@ -2744,46 +2744,45 @@ public class tileGraphics
 		}
 		this.pushTileArray();
 	}
+
 	//this sends the tile array to the render class to be converted into a BMP format
 	public void pushTileArray(bool update = true)
 	{
-		//see render clearImg
-		for(int i = 0; i < 76800; i++)
+		for (var j = 0; j < 40 * 30 * 4; j += 4)
 		{
-			//pixels of a tile
-			int pixelX = i % 8;
-			int pixelY = ((i - (i % 320)) / 320) % 8;
-			//tiles' position
-			int tileX = ((i % 320) - (i % 8))/8;
-			int tileY = (i - (i % 2560))/2560;
-			//tilemap position
-			int j = (tileY * 40 + tileX)*4;
-			//only updating the pixel array if the tile changed flag is set(for optimisation)
-			if(tilemap[j+3] == 1)
+			if (tilemap[j + 3] == 0)
+				continue;
+
+			var i = (j / 4 % 40 * 8) + (j / 160 * 2560 /* 320 * 8 */);
+			for (var y = 0; y < 8; y++)
 			{
-				//if the pixel of the tile should be the foreground color
-				if(tileArray[tilemap[j],pixelY, pixelX] == "f")
+				for (var x = 0; x < 8; x++)
 				{
-					render.colorArray[i] = tilemap[j+1];
+					if (tileArray[tilemap[j], y, x] == "f")
+					{
+						render.colorArray[i] = tilemap[j + 1];
+					}
+					//if the pixel of the tile should be the background color
+					else if (tileArray[tilemap[j], y, x] == "b")
+					{
+						render.colorArray[i] = tilemap[j + 2];
+					}
+
+					i++;
 				}
-				//if the pixel of the tile should be the background color
-				else if(tileArray[tilemap[j],pixelY, pixelX] == "b")
-				{
-					render.colorArray[i] = tilemap[j+2];
-				}
-				//setting the tile changed flag to zero to indicate the tile has been drawn
-				if((pixelX + 1 ) * (pixelY + 1) == 64)
-				{
-					tilemap[j+3] = 0;
-				}
+
+				i = i + 312 /* 320 - 8 */;
 			}
+
+			tilemap[j + 3] = 0;
 		}
 		render.pixelPaint();
-		if(update)
+		if (update)
 		{
 			render.generate();
 		}
 	}
+
 	//allows for checking what's in the tile array (giving direct access to thetile array may lead to code not working as intended)
 	public void readTileArray(int x, int y, string str, out int val)
 	{
