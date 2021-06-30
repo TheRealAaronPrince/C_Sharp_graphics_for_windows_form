@@ -25,15 +25,11 @@ public class render
 		//number of pixels in the image
 		for( int i = 0; i < colorArray.Length; i++)
 		{
-			//red
-			pixelBuffer[(4*i)+0] = red;
-			//green
-			pixelBuffer[(4*i)+1] = green;
-			//blue
-			pixelBuffer[(4*i)+2] = blue;
-			//alpha (unused for now)
-			pixelBuffer[(4*i)+3] = 255;
-			colorArray[i] = color;
+			var r = colorIndexToColor[color];
+			pixelBuffer[i + 0] = r.R;
+			pixelBuffer[i + 1] = r.G;
+			pixelBuffer[i + 2] = r.B;
+			pixelBuffer[i + 3] = 255;
 		}
 	}
 	//convert color array to pixel buffer
