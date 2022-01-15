@@ -37,7 +37,7 @@ public class render
 	public void pixelPaint()
 	{
 		//see clearImg
-		for(int i = 0; i < colorArray.Length; i++)
+		for(int i = 0; i < (colorArray.Length-1)*4; i++)
 		{
 			//0 to width -1
 			int x = i % width;
